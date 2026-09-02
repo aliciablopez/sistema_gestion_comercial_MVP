@@ -1,37 +1,8 @@
-# ==============================================================================
-# INTERFAZ DE LA APLICACIÓN
-# ==============================================================================
-
-# tkinter contiene los elementos básicos de la interfaz gráfica.
-
-import tkinter as tk
-
-
-# ttk contiene widgets adicionales de Tkinter.
-#
-# En este ejercicio utilizamos:
-#
-#   - Notebook → organiza las pestañas
-#   - Frame    → sirve como contenedor de cada pestaña
+# interfaz.py
 
 from tkinter import ttk
 
-
-# ==============================================================================
-# IMPORTACIÓN DE LOS MÓDULOS DEL SISTEMA
-# ==============================================================================
-
-# CAMBIO IMPORTANTE
-# ------------------------------------------------------------------------------
-#
-# Antes interfaz.py solamente creaba las pestañas y colocaba un texto
-# provisional dentro de cada una.
-#
-# Ahora interfaz.py debe llamar a cada módulo para que ese módulo
-# construya el contenido de su propia pestaña.
-#
-# Por eso importamos las cinco clases.
-
+# Importamos los módulos de cada pestaña
 from clientes import Clientes
 from empleados import Empleados
 from proveedores import Proveedores
@@ -39,248 +10,62 @@ from stock import Stock
 from facturacion import Facturacion
 
 
-# ==============================================================================
-# FUNCIÓN PRINCIPAL DE LA INTERFAZ
-# ==============================================================================
-
-def iniciar_aplicacion():
-
-    # --------------------------------------------------------------------------
-    # 1. CREAR LA VENTANA PRINCIPAL
-    # --------------------------------------------------------------------------
-
-    # tk.Tk() crea la ventana raíz de la aplicación.
-    #
-    # Esta es la ÚNICA ventana principal del programa.
-
-    ventana = tk.Tk()
-
-
-    ventana.title(
-        "Sistema de Gestión Comercial"
-    )
-
-
-    ventana.geometry(
-        "900x600"
-    )
-
-
-    # Evitamos que el usuario cambie el tamaño de la ventana.
-
-    ventana.resizable(
-        False,
-        False
-    )
-
-
-    # --------------------------------------------------------------------------
-    # 2. CREAR EL NOTEBOOK
-    # --------------------------------------------------------------------------
-
-    # Notebook es un widget de ttk que permite organizar
-    # diferentes contenidos mediante pestañas.
-    #
-    # El Notebook pertenece a la ventana principal.
-
-    notebook = ttk.Notebook(
-        ventana
-    )
-
-
-    # Colocamos el Notebook dentro de la ventana principal.
-    #
-    # pack() se utiliza aquí porque estamos colocando el Notebook
-    # como una zona general dentro de la ventana.
-    #
-    # fill="both" → ocupa horizontal y verticalmente el espacio disponible.
-    #
-    # expand=True → permite que se expanda cuando la ventana dispone
-    # de espacio adicional.
-
-    notebook.pack(
-        fill="both",
-        expand=True,
-        padx=10,
-        pady=10
-    )
-
-
-    # --------------------------------------------------------------------------
-    # 3. CREAR LAS PESTAÑAS
-    # --------------------------------------------------------------------------
-
-    # Cada pestaña será un Frame.
-    #
-    # Un Frame es un widget contenedor:
-    # permite colocar dentro otros widgets.
-    #
-    # IMPORTANTE:
-    #
-    # interfaz.py CREA las pestañas.
-    #
-    # Los módulos NO las crean.
-    #
-    # Esta es la decisión arquitectónica que estamos utilizando
-    # en todo el laboratorio.
-
-
-    pestana_clientes = ttk.Frame(
-        notebook
-    )
-
-
-    pestana_empleados = ttk.Frame(
-        notebook
-    )
-
-
-    pestana_proveedores = ttk.Frame(
-        notebook
-    )
-
-
-    pestana_stock = ttk.Frame(
-        notebook
-    )
-
-
-    pestana_facturacion = ttk.Frame(
-        notebook
-    )
-
-
-    # --------------------------------------------------------------------------
-    # 4. AGREGAR LAS PESTAÑAS AL NOTEBOOK
-    # --------------------------------------------------------------------------
-
-    # notebook.add() agrega cada Frame como una pestaña.
-
-    notebook.add(
-        pestana_clientes,
-        text="Clientes"
-    )
-
-
-    notebook.add(
-        pestana_empleados,
-        text="Empleados"
-    )
-
-
-    notebook.add(
-        pestana_proveedores,
-        text="Proveedores"
-    )
-
-
-    notebook.add(
-        pestana_stock,
-        text="Stock"
-    )
-
-
-    notebook.add(
-        pestana_facturacion,
-        text="Facturación"
-    )
-
-
-    # ==========================================================================
-    # 5. CONSTRUIR EL CONTENIDO DE CADA PESTAÑA
-    # ==========================================================================
-
-    # CAMBIO FUNDAMENTAL
-    # --------------------------------------------------------------------------
-    #
-    # Este es el bloque que faltaba.
-    #
-    # Hasta ahora interfaz.py hacía:
-    #
-    #     crear pestaña
-    #          ↓
-    #     colocar "Ficha de Clientes"
-    #
-    # Ahora hacemos:
-    #
-    #     crear pestaña
-    #          ↓
-    #     entregar pestaña al módulo correspondiente
-    #          ↓
-    #     el módulo construye su contenido
-    #
-    #
-    # Cada clase recibe la pestaña que interfaz.py ya creó.
-    #
-    # Por ejemplo:
-    #
-    #     Clientes(pestana_clientes)
-    #
-    # significa:
-    #
-    #     "Clientes, construye tu interfaz dentro de esta pestaña".
-
-
-    # --------------------------------------------------------------------------
-    # CLIENTES
-    # --------------------------------------------------------------------------
-
-    Clientes(
-        pestana_clientes
-    )
-
-
-    # --------------------------------------------------------------------------
-    # EMPLEADOS
-    # --------------------------------------------------------------------------
-
-    Empleados(
-        pestana_empleados
-    )
-
-
-    # --------------------------------------------------------------------------
-    # PROVEEDORES
-    # --------------------------------------------------------------------------
-
-    Proveedores(
-        pestana_proveedores
-    )
-
-
-    # --------------------------------------------------------------------------
-    # STOCK
-    # --------------------------------------------------------------------------
-
-    Stock(
-        pestana_stock
-    )
-
-
-    # --------------------------------------------------------------------------
-    # FACTURACIÓN
-    # --------------------------------------------------------------------------
-
-    Facturacion(
-        pestana_facturacion
-    )
-
-
-    # ==========================================================================
-    # 6. BUCLE PRINCIPAL
-    # ==========================================================================
-
-    # mainloop() mantiene abierta la ventana y espera
-    # las acciones del usuario.
-    #
-    # Es el único mainloop() de todo nuestro proyecto.
-    #
-    # Mientras mainloop() está funcionando:
-    #
-    #     usuario hace algo
-    #          ↓
-    #     Tkinter detecta el evento
-    #          ↓
-    #     ejecuta la función correspondiente
-
-    ventana.mainloop()
+class AplicacionPrincipal:
+
+    def __init__(self, ventana_raiz):
+        # Guardamos la ventana principal enviada desde main.py
+        self.ventana_raiz = ventana_raiz
+        self.ventana_raiz.title("Sistema de Gestión Comercial y Facturación - MVP")
+        self.ventana_raiz.geometry("850x550")
+        self.ventana_raiz.resizable(False, False)
+
+        # ----------------------------------------------------------------------
+        # 1. PANEL DE PESTAÑAS (NOTEBOOK)
+        # ----------------------------------------------------------------------
+        self.notebook = ttk.Notebook(self.ventana_raiz)
+        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Creación de las estructuras (Marcos/Frames) de cada pestaña
+        self.frame_clientes = ttk.Frame(self.notebook)
+        self.frame_empleados = ttk.Frame(self.notebook)
+        self.frame_proveedores = ttk.Frame(self.notebook)
+        self.frame_stock = ttk.Frame(self.notebook)
+        self.frame_facturacion = ttk.Frame(self.notebook)
+
+        # Agregamos los marcos al panel con sus respectivos nombres
+        self.notebook.add(self.frame_clientes, text="Clientes")
+        self.notebook.add(self.frame_empleados, text="Empleados")
+        self.notebook.add(self.frame_proveedores, text="Proveedores")
+        self.notebook.add(self.frame_stock, text="Stock")
+        self.notebook.add(self.frame_facturacion, text="Facturación")
+
+        # ----------------------------------------------------------------------
+        # 2. CONSTRUCCIÓN DE CONTENIDOS Y CONEXIÓN DE MÓDULOS
+        # ----------------------------------------------------------------------
+        # Pestañas de gestión de personas
+        self.modulo_clientes = Clientes(self.frame_clientes)
+        self.modulo_empleados = Empleados(self.frame_empleados)
+        self.modulo_proveedores = Proveedores(self.frame_proveedores)
+
+        # Módulo de Stock (guardamos su referencia)
+        self.modulo_stock = Stock(self.frame_stock)
+
+        # Módulo de Facturación: le enviamos la referencia del módulo de Stock
+        # para que pueda pedirle que recargue la tabla al guardar una venta
+        self.modulo_facturacion = Facturacion(
+            self.frame_facturacion, self.modulo_stock
+        )
+
+        # ----------------------------------------------------------------------
+        # 3. SENSOR AUTOMÁTICO DE CAMBIO DE PESTAÑA
+        # ----------------------------------------------------------------------
+        # Cuando el usuario hace clic en cualquier pestaña, se ejecuta la función
+        self.notebook.bind("<<NotebookTabChanged>>", self.al_cambiar_pestana)
+
+    def al_cambiar_pestana(self, _event):
+        """Si la pestaña seleccionada es 'Stock', obliga a recargar la tabla visual."""
+        pestana_activa = self.notebook.select()
+        nombre_pestana = self.notebook.tab(pestana_activa, "text")
+
+        if nombre_pestana == "Stock":
+            self.modulo_stock.cargar_datos_en_tabla()

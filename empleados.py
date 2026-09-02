@@ -1,884 +1,297 @@
-# ==============================================================================
-# EMPLEADOS.PY
-# ==============================================================================
+# empleados.py
 
-# Este módulo contiene la interfaz y la lógica CRUD de la pestaña Empleados. La ventana principal y el Notebook NO se crean aquí. Esos elementos pertenecen a interfaz.py.
-## interfaz.py crea la pestaña y se la entrega a esta clase. La estructura general es:
-#
-#     main.py
-#         ↓
-#     interfaz.py
-#         ↓
-#     Notebook
-#         ↓
-#     pestaña Empleados
-#         ↓
-#     Empleados
-#         ↓
-#     formulario + Treeview + CRUD
-#
+# Responsabilidad del módulo: Construir y administrar la pestaña "Empleados".
+# Maneja la captura de datos (Nombre, Legajo, Puesto) y la interacción
+# directa con las funciones CRUD de empleados en database.py.
 
-# ==============================================================================
-# 1. IMPORTACIONES
-# ==============================================================================
-
-# Tkinter permite crear la interfaz gráfica.
 import tkinter as tk
+from tkinter import messagebox, ttk
 
-# ttk es un módulo de Tkinter que proporciona widgets adicionales. En este módulo utilizamos Treeview para mostrar los registros de empleados dentro de la pestaña de Empleados.
-from tkinter import ttk
+# Importamos las funciones específicas de empleados desde database.py
+from database import (
+    actualizar_empleado,
+    eliminar_empleado,
+    insertar_empleado,
+    obtener_empleados,
+)
 
-# messagebox permite mostrar mensajes de información, error, advertencia y confirmación.
-from tkinter import messagebox
-
-
-# ==============================================================================
-# 2. CLASE EMPLEADOS: sólo una en cada proyecto
-# ==============================================================================
 
 class Empleados:
 
     def __init__(self, pestana):
-
-        # ----------------------------------------------------------------------
-        # RECIBIMOS LA PESTAÑA
-        # ----------------------------------------------------------------------
-
-        # interfaz.py ya creó la pestaña correspondiente a Empleados. No creamos una nueva ventana Tk(). Tampoco creamos aquí el Notebook. Simplemente recibimos la pestaña como parámetro.
         self.pestana = pestana
 
+        # ======================================================================
+        # 1. FORMULARIO DE ENTRADA
+        # ======================================================================
 
-        # ==========================================================================
-        # 3. FORMULARIO DE EMPLEADOS
-        # ==========================================================================
-
-        # --------------------------------------------------------------------------
-        # APELLIDO
-        # --------------------------------------------------------------------------
-
-        tk.Label(
-            self.pestana,
-            text="Apellido:"
-        ).grid(
-            row=0,
-            column=0,
-            padx=5,
-            pady=4,
-            sticky="e"
-        )
-
-        # Entry permite introducir el apellido. Lo guardamos como atributo de la instancia porque las funciones CRUD necesitarán acceder posteriormente a este Entry.
-
-        self.caja_apellido = tk.Entry(
-            self.pestana,
-            width=25
-        )
-
-        self.caja_apellido.grid(
-            row=0,
-            column=1,
-            padx=5,
-            pady=4
-        )
-
-        # --------------------------------------------------------------------------
         # NOMBRE
-        # --------------------------------------------------------------------------
-
-        tk.Label(
-            self.pestana,
-            text="Nombre:"
-        ).grid(
-            row=1,
-            column=0,
-            padx=5,
-            pady=4,
-            sticky="e"
+        tk.Label(self.pestana, text="Nombre Completo:").grid(
+            row=0, column=0, padx=5, pady=4, sticky="e"
         )
+        self.caja_nombre = tk.Entry(self.pestana, width=25)
+        self.caja_nombre.grid(row=0, column=1, padx=5, pady=4)
 
-        self.caja_nombre = tk.Entry(
-            self.pestana,
-            width=25
+        # LEGAJO
+        tk.Label(self.pestana, text="Legajo:").grid(
+            row=1, column=0, padx=5, pady=4, sticky="e"
         )
+        self.caja_legajo = tk.Entry(self.pestana, width=25)
+        self.caja_legajo.grid(row=1, column=1, padx=5, pady=4)
 
-        self.caja_nombre.grid(
-            row=1,
-            column=1,
-            padx=5,
-            pady=4
+        # PUESTO
+        tk.Label(self.pestana, text="Puesto:").grid(
+            row=2, column=0, padx=5, pady=4, sticky="e"
         )
+        self.caja_puesto = tk.Entry(self.pestana, width=25)
+        self.caja_puesto.grid(row=2, column=1, padx=5, pady=4)
 
-        # --------------------------------------------------------------------------
-        # DNI
-        # --------------------------------------------------------------------------
+        # ======================================================================
+        # 2. TREEVIEW / TABLA DE EMPLEADOS
+        # ======================================================================
+        columnas = ("Nombre", "Legajo", "Puesto")
 
-        tk.Label(
-            self.pestana,
-            text="DNI:"
-        ).grid(
-            row=2,
-            column=0,
-            padx=5,
-            pady=4,
-            sticky="e"
-        )
-
-        self.caja_dni = tk.Entry(
-            self.pestana,
-            width=25
-        )
-
-        self.caja_dni.grid(
-            row=2,
-            column=1,
-            padx=5,
-            pady=4
-        )
-
-        # --------------------------------------------------------------------------
-        # SUELDO BÁSICO
-        # --------------------------------------------------------------------------
-
-        tk.Label(
-            self.pestana,
-            text="Sueldo básico:"
-        ).grid(
-            row=3,
-            column=0,
-            padx=5,
-            pady=4,
-            sticky="e"
-        )
-
-        self.caja_sueldo = tk.Entry(
-            self.pestana,
-            width=25
-        )
-
-        self.caja_sueldo.grid(
-            row=3,
-            column=1,
-            padx=5,
-            pady=4
-        )
-
-        # ==========================================================================
-        # 4. TABLA DE EMPLEADOS
-        # ==========================================================================
-
-        # Definimos las columnas que tendrá el Treeview. # El orden es importante porque posteriormente accederemos a los valores mediante sus posiciones:
-            # valores[0] → Apellido
-            # valores[1] → Nombre
-            # valores[2] → DNI
-            # valores[3] → Sueldo básico
-        columnas = (
-            "Apellido",
-            "Nombre",
-            "DNI",
-            "Sueldo básico"
-        )
-
-        # Creamos el Treeview dentro de la pestaña.
         self.tabla = ttk.Treeview(
-            self.pestana,
-            columns=columnas,
-            show="headings",
-            height=10
+            self.pestana, columns=columnas, show="headings", height=10
         )
 
-        # Definimos el ancho de cada columna.
-        anchos = [180, 180, 120, 140]
+        anchos = [250, 150, 200]
 
-        # Configuramos cada columna. enumerate() permite obtener:
-            # idx → posición de la columna
-            # col → nombre de la columna
-        for idx, col in enumerate(columnas):
+        for idx, columna in enumerate(columnas):
+            self.tabla.heading(columna, text=columna)
+            self.tabla.column(columna, width=anchos[idx], anchor="center")
 
-            # Texto del encabezado.
-            self.tabla.heading(
-                col,
-                text=col
-            )
-
-            # Ancho y alineación de la columna.
-            self.tabla.column(
-                col,
-                width=anchos[idx],
-                anchor="center"
-            )
-
-
-        # Ubicamos la tabla debajo del formulario.
         self.tabla.grid(
-            row=5,
-            column=0,
-            columnspan=5,
-            padx=15,
-            pady=(10, 15),
-            sticky="ew"
+            row=6, column=0, columnspan=5, padx=15, pady=(10, 15), sticky="ew"
         )
 
+        # ======================================================================
+        # 3. FUNCIONES INTERNAS Y PERSISTENCIA
+        # ======================================================================
 
-        # ==========================================================================
-        # 5. FUNCIONES CRUD
-        # ==========================================================================
+        def cargar_tabla_desde_db():
+            """Consulta SQLite y recarga la vista visual."""
+            for item in self.tabla.get_children():
+                self.tabla.delete(item)
 
-        # --------------------------------------------------------------------------
-        # LIMPIAR CAMPOS
-        # --------------------------------------------------------------------------
+            empleados = obtener_empleados()
+
+            for emp in empleados:
+                self.tabla.insert(
+                    "",
+                    "end",
+                    iid=emp["id"],
+                    values=(
+                        emp["nombre"],
+                        emp["legajo"],
+                        emp["puesto"],
+                    ),
+                )
 
         def limpiar_campos():
-
-            # delete() elimina el contenido del Entry.
-            #
-            # 0 representa la posición inicial.
-            # tk.END representa el final del contenido.
-            self.caja_apellido.delete(0, tk.END)
             self.caja_nombre.delete(0, tk.END)
-            self.caja_dni.delete(0, tk.END)
-            self.caja_sueldo.delete(0, tk.END)
-
-
-        # --------------------------------------------------------------------------
-        # NUEVO EMPLEADO
-        # --------------------------------------------------------------------------
+            self.caja_legajo.delete(0, tk.END)
+            self.caja_puesto.delete(0, tk.END)
 
         def nuevo_empleado():
-
-            # Limpiamos el formulario.
             limpiar_campos()
-
-            # Quitamos cualquier selección de la tabla.
-            self.tabla.selection_remove(
-                self.tabla.selection()
-            )
-
-            # Colocamos el cursor en el primer campo.
-            self.caja_apellido.focus()
-
-
-        # --------------------------------------------------------------------------
-        # CARGAR DATOS DE LA FILA SELECCIONADA
-        # --------------------------------------------------------------------------
+            self.tabla.selection_remove(self.tabla.selection())
+            self.caja_nombre.focus()
 
         def cargar_datos_seleccionados(event=None):
-
-            # Obtenemos la fila seleccionada.
             seleccion = self.tabla.selection()
-
-
-            # Si no hay selección, no hacemos nada.
             if not seleccion:
                 return
 
-
-            # Obtenemos el identificador de la primera fila.
-            #
-            # selection() devuelve una tupla.
-            # seleccion[0] contiene el primer identificador.
             item_id = seleccion[0]
+            valores = self.tabla.item(item_id, "values")
 
-
-            # Obtenemos los valores almacenados en esa fila.
-            valores = self.tabla.item(
-                item_id,
-                "values"
-            )
-
-
-            # Limpiamos primero los Entry.
             limpiar_campos()
-
-
-            # Cargamos los valores de la tabla en el formulario.
-            self.caja_apellido.insert(
-                0,
-                valores[0]
-            )
-
-            self.caja_nombre.insert(
-                0,
-                valores[1]
-            )
-
-            self.caja_dni.insert(
-                0,
-                valores[2]
-            )
-
-            self.caja_sueldo.insert(
-                0,
-                valores[3]
-            )
-
-
-        # --------------------------------------------------------------------------
-        # GUARDAR EMPLEADO
-        # --------------------------------------------------------------------------
+            self.caja_nombre.insert(0, valores[0])
+            self.caja_legajo.insert(0, valores[1])
+            self.caja_puesto.insert(0, valores[2])
 
         def guardar():
-
-            # Obtenemos el contenido de cada Entry.
-            #
-            # get() obtiene el texto.
-            # strip() elimina espacios al principio y al final.
-            apellido = self.caja_apellido.get().strip()
+            """Captura las entradas, valida y llama a la persistencia en SQLite."""
             nombre = self.caja_nombre.get().strip()
-            dni = self.caja_dni.get().strip()
-            sueldo = self.caja_sueldo.get().strip()
+            legajo = self.caja_legajo.get().strip()
+            puesto = self.caja_puesto.get().strip()
 
-
-            # ----------------------------------------------------------------------
-            # VALIDACIÓN DE CAMPOS OBLIGATORIOS
-            # ----------------------------------------------------------------------
-
-            # Para este ejercicio consideramos obligatorios
-            # el apellido y el DNI.
-            if not apellido or not dni:
-
+            if not nombre or not legajo:
                 messagebox.showerror(
                     "Error",
-                    "Apellido y DNI son obligatorios.",
-                    parent=self.pestana
+                    "El Nombre y el Legajo son obligatorios.",
+                    parent=self.pestana,
                 )
-
                 return
 
+            # LLAMADA CLAVE A LA BASE DE DATOS
+            exito = insertar_empleado(nombre, legajo, puesto)
 
-            # ----------------------------------------------------------------------
-            # VALIDACIÓN DEL DNI
-            # ----------------------------------------------------------------------
-
-            # isdigit() comprueba que todos los caracteres sean números.
-            if not dni.isdigit():
-
+            if exito:
+                messagebox.showinfo(
+                    "Éxito", "Empleado guardado con éxito.", parent=self.pestana
+                )
+                limpiar_campos()
+                cargar_tabla_desde_db()  # Refresca la tabla visual
+            else:
                 messagebox.showerror(
                     "Error",
-                    "El DNI debe contener solamente números.",
-                    parent=self.pestana
+                    "Ya existe un empleado con ese número de Legajo.",
+                    parent=self.pestana,
                 )
-
-                return
-
-
-            # ----------------------------------------------------------------------
-            # CONTROL DE DNI DUPLICADO
-            # ----------------------------------------------------------------------
-
-            # Recorremos todas las filas existentes.
-            for item in self.tabla.get_children():
-
-                # Obtenemos los valores de la fila actual.
-                valores = self.tabla.item(
-                    item,
-                    "values"
-                )
-
-
-                # El DNI ocupa la posición 2.
-                if valores[2] == dni:
-
-                    messagebox.showerror(
-                        "Error",
-                        "Ya existe un empleado con ese DNI.",
-                        parent=self.pestana
-                    )
-
-                    return
-
-
-            # ----------------------------------------------------------------------
-            # INSERTAR EMPLEADO
-            # ----------------------------------------------------------------------
-
-            # Insertamos una nueva fila al final de la tabla.
-            self.tabla.insert(
-                "",
-                "end",
-                values=(
-                    apellido,
-                    nombre,
-                    dni,
-                    sueldo
-                )
-            )
-
-
-            # Informamos que la operación terminó correctamente.
-            messagebox.showinfo(
-                "Éxito",
-                "Empleado guardado.",
-                parent=self.pestana
-            )
-
-
-            # Limpiamos el formulario.
-            limpiar_campos()
-
-
-        # --------------------------------------------------------------------------
-        # MODIFICAR EMPLEADO
-        # --------------------------------------------------------------------------
 
         def modificar():
-
-            # Comprobamos si existe una fila seleccionada.
             seleccion = self.tabla.selection()
-
-
             if not seleccion:
-
                 messagebox.showwarning(
                     "Atención",
                     "Selecciona un empleado de la tabla para modificar.",
-                    parent=self.pestana
+                    parent=self.pestana,
                 )
-
                 return
 
+            id_empleado = seleccion[0]
+            valores = self.tabla.item(id_empleado, "values")
 
-            # Obtenemos el identificador de la fila.
-            item_id = seleccion[0]
-
-
-            # Obtenemos los valores actuales.
-            valores = self.tabla.item(
-                item_id,
-                "values"
-            )
-
-
-            # ==========================================================================
-            # VENTANA DE EDICIÓN
-            # ==========================================================================
-
-            # Toplevel crea una ventana secundaria.
-            #
-            # A diferencia de la ventana principal, esta ventana se utiliza
-            # solamente para modificar el registro seleccionado.
-            ventana_edicion = tk.Toplevel(
-                self.pestana
-            )
-
+            ventana_edicion = tk.Toplevel(self.pestana)
             ventana_edicion.title("Modificar Empleado")
-            ventana_edicion.geometry("400x330")
+            ventana_edicion.geometry("400x280")
             ventana_edicion.resizable(False, False)
-
-            # La ventana queda asociada visualmente a la pestaña.
-            ventana_edicion.transient(
-                self.pestana
-            )
-
-            # grab_set() hace que el usuario deba terminar esta operación antes de volver a utilizar el resto de la interfaz.
+            ventana_edicion.transient(self.pestana)
             ventana_edicion.grab_set()
-
-            # ----------------------------------------------------------------------
-            # TÍTULO
-            # ----------------------------------------------------------------------
 
             tk.Label(
                 ventana_edicion,
                 text="Modificar datos del empleado",
-                font=("Arial", 12, "bold")
-            ).pack(
-                pady=(15, 10)
-            )
+                font=("Arial", 12, "bold"),
+            ).pack(pady=(15, 10))
 
-            # ----------------------------------------------------------------------
-            # APELLIDO
-            # ----------------------------------------------------------------------
+            tk.Label(ventana_edicion, text="Nombre:").pack(anchor="w", padx=30)
+            caja_edicion_nombre = tk.Entry(ventana_edicion, width=40)
+            caja_edicion_nombre.pack(padx=30, pady=(2, 8))
+            caja_edicion_nombre.insert(0, valores[0])
 
-            tk.Label(
-                ventana_edicion,
-                text="Apellido:"
-            ).pack(
-                anchor="w",
-                padx=30
-            )
+            tk.Label(ventana_edicion, text="Legajo:").pack(anchor="w", padx=30)
+            caja_edicion_legajo = tk.Entry(ventana_edicion, width=40)
+            caja_edicion_legajo.pack(padx=30, pady=(2, 8))
+            caja_edicion_legajo.insert(0, valores[1])
 
-            caja_edicion_apellido = tk.Entry(
-                ventana_edicion,
-                width=40
-            )
+            tk.Label(ventana_edicion, text="Puesto:").pack(anchor="w", padx=30)
+            caja_edicion_puesto = tk.Entry(ventana_edicion, width=40)
+            caja_edicion_puesto.pack(padx=30, pady=(2, 12))
+            caja_edicion_puesto.insert(0, valores[2])
 
-            caja_edicion_apellido.pack(
-                padx=30,
-                pady=(2, 6)
-            )
-
-            # Cargamos el apellido actual.
-            caja_edicion_apellido.insert(
-                0,
-                valores[0]
-            )
-
-            # ----------------------------------------------------------------------
-            # NOMBRE
-            # ----------------------------------------------------------------------
-
-            tk.Label(
-                ventana_edicion,
-                text="Nombre:"
-            ).pack(
-                anchor="w",
-                padx=30
-            )
-
-            caja_edicion_nombre = tk.Entry(
-                ventana_edicion,
-                width=40
-            )
-
-            caja_edicion_nombre.pack(
-                padx=30,
-                pady=(2, 6)
-            )
-
-            caja_edicion_nombre.insert(
-                0,
-                valores[1]
-            )
-
-            # ----------------------------------------------------------------------
-            # DNI
-            # ----------------------------------------------------------------------
-
-            tk.Label(
-                ventana_edicion,
-                text="DNI:"
-            ).pack(
-                anchor="w",
-                padx=30
-            )
-
-            caja_edicion_dni = tk.Entry(
-                ventana_edicion,
-                width=40
-            )
-
-            caja_edicion_dni.pack(
-                padx=30,
-                pady=(2, 6)
-            )
-
-            caja_edicion_dni.insert(
-                0,
-                valores[2]
-            )
-
-            # ----------------------------------------------------------------------
-            # SUELDO BÁSICO
-            # ----------------------------------------------------------------------
-
-            tk.Label(
-                ventana_edicion,
-                text="Sueldo básico:"
-            ).pack(
-                anchor="w",
-                padx=30
-            )
-
-            caja_edicion_sueldo = tk.Entry(
-                ventana_edicion,
-                width=40
-            )
-
-            caja_edicion_sueldo.pack(
-                padx=30,
-                pady=(2, 10)
-            )
-
-            caja_edicion_sueldo.insert(
-                0,
-                valores[3]
-            )
-
-
-            # ==========================================================================
-            # GUARDAR MODIFICACIÓN
-            # ==========================================================================
-
-            # Esta función pertenece a la operación de modificación. Se ejecuta cuando el usuario pulsa "Guardar cambios".
             def guardar_modificacion():
+                nom_mod = caja_edicion_nombre.get().strip()
+                leg_mod = caja_edicion_legajo.get().strip()
+                pue_mod = caja_edicion_puesto.get().strip()
 
-                # Obtenemos los nuevos valores.
-                apellido_mod = caja_edicion_apellido.get().strip()
-                nombre_mod = caja_edicion_nombre.get().strip()
-                dni_mod = caja_edicion_dni.get().strip()
-                sueldo_mod = caja_edicion_sueldo.get().strip()
-
-                # ------------------------------------------------------------------
-                # VALIDACIÓN
-                # ------------------------------------------------------------------
-
-                if not apellido_mod or not dni_mod:
-
+                if not nom_mod or not leg_mod:
                     messagebox.showerror(
                         "Error",
-                        "Apellido y DNI son obligatorios.",
-                        parent=ventana_edicion
+                        "Nombre y Legajo son obligatorios.",
+                        parent=ventana_edicion,
                     )
-
                     return
 
+                exito = actualizar_empleado(
+                    id_empleado, nom_mod, leg_mod, pue_mod
+                )
 
-                # ------------------------------------------------------------------
-                # VALIDACIÓN DEL DNI
-                # ------------------------------------------------------------------
-
-                if not dni_mod.isdigit():
-
+                if exito:
+                    ventana_edicion.destroy()
+                    messagebox.showinfo(
+                        "Éxito",
+                        "Empleado modificado correctamente.",
+                        parent=self.pestana,
+                    )
+                    cargar_tabla_desde_db()
+                else:
                     messagebox.showerror(
                         "Error",
-                        "El DNI debe contener solamente números.",
-                        parent=ventana_edicion
+                        "Ya existe otro empleado con ese legajo.",
+                        parent=ventana_edicion,
                     )
 
-                    return
-
-
-                # ------------------------------------------------------------------
-                # CONTROL DE DNI DUPLICADO
-                # ------------------------------------------------------------------
-
-                # Recorremos todas las filas existentes.
-                for item in self.tabla.get_children():
-
-                    # No comparamos la fila consigo misma.
-                    if item == item_id:
-                        continue
-
-                    valores_otro = self.tabla.item(
-                        item,
-                        "values"
-                    )
-
-                    # Comprobamos si el nuevo DNI pertenece a otro empleado.
-                    if valores_otro[2] == dni_mod:
-
-                        messagebox.showerror(
-                            "Error",
-                            "Ya existe otro empleado con ese DNI.",
-                            parent=ventana_edicion
-                        )
-
-                        return
-
-                # ------------------------------------------------------------------
-                # ACTUALIZAR LA FILA
-                # ------------------------------------------------------------------
-
-                # Reemplazamos los valores de la fila seleccionada.
-                self.tabla.item(
-                    item_id,
-                    values=(
-                        apellido_mod,
-                        nombre_mod,
-                        dni_mod,
-                        sueldo_mod
-                    )
-                )
-
-                # Cerramos la ventana de edición.
-                ventana_edicion.destroy()
-
-                # Informamos que la modificación terminó correctamente.
-                messagebox.showinfo(
-                    "Éxito",
-                    "El empleado fue modificado correctamente.",
-                    parent=self.pestana
-                )
-
-            # ==========================================================================
-            # BOTONES DE LA VENTANA DE EDICIÓN
-            # ==========================================================================
-
-            marco_botones = tk.Frame(
-                ventana_edicion
-            )
-
-            marco_botones.pack(
-                pady=5
-            )
-
-            # ----------------------------------------------------------------------
-            # GUARDAR CAMBIOS
-            # ----------------------------------------------------------------------
+            marco_botones = tk.Frame(ventana_edicion)
+            marco_botones.pack(pady=5)
 
             tk.Button(
                 marco_botones,
                 text="Guardar cambios",
                 command=guardar_modificacion,
-                width=16
-            ).pack(
-                side="left",
-                padx=5
-            )
+                width=16,
+            ).pack(side="left", padx=5)
 
-            # ----------------------------------------------------------------------
-            # CANCELAR
-            # ----------------------------------------------------------------------
-
-            # destroy() cierra la ventana sin modificar la fila.
             tk.Button(
                 marco_botones,
                 text="Cancelar",
                 command=ventana_edicion.destroy,
-                width=12
-            ).pack(
-                side="left",
-                padx=5
-            )
-
-            # Colocamos el cursor en el primer campo.
-            caja_edicion_apellido.focus()
-
-        # --------------------------------------------------------------------------
-        # ELIMINAR EMPLEADO
-        # --------------------------------------------------------------------------
+                width=12,
+            ).pack(side="left", padx=5)
 
         def eliminar():
-            # Obtenemos la fila seleccionada.
             seleccion = self.tabla.selection()
-
-            # Si no hay selección, mostramos un aviso.
             if not seleccion:
                 messagebox.showwarning(
                     "Atención",
                     "Selecciona un empleado de la tabla para eliminar.",
-                    parent=self.pestana
+                    parent=self.pestana,
                 )
                 return
 
-            # Obtenemos el identificador de la fila.
-            item_id = seleccion[0]
-
-            # Obtenemos los valores de esa fila.
-            valores = self.tabla.item(
-                item_id,
-                "values"
-            )
-
-            # Separamos los valores para mostrarlos en el mensaje de confirmación.
-            apellido = valores[0]
-            nombre = valores[1]
-            dni = valores[2]
-            sueldo = valores[3]
-
-            # ----------------------------------------------------------------------
-            # CONFIRMACIÓN DE LA BAJA
-            # ----------------------------------------------------------------------
+            id_empleado = seleccion[0]
+            valores = self.tabla.item(id_empleado, "values")
 
             confirmar = messagebox.askyesno(
                 "Confirmar baja",
-                f"¿Deseas eliminar el siguiente empleado?\n\n"
-                f"Apellido: {apellido}\n"
-                f"Nombre: {nombre}\n"
-                f"DNI: {dni}\n"
-                f"Sueldo básico: {sueldo}\n\n"
-                f"Esta operación no se puede deshacer.",
-                parent=self.pestana
+                f"¿Deseas eliminar al empleado {valores[0]} (Legajo: {valores[1]})?",
+                parent=self.pestana,
             )
 
-            # ----------------------------------------------------------------------
-            # ELIMINAR LA FILA
-            # ----------------------------------------------------------------------
-
             if confirmar:
-
-                # Eliminamos solamente la fila seleccionada.
-                self.tabla.delete(
-                    item_id
-                )
-
-                # Limpiamos el formulario.
+                eliminar_empleado(id_empleado)
                 limpiar_campos()
-
-                # Informamos que la baja fue realizada.
+                cargar_tabla_desde_db()
                 messagebox.showinfo(
-                    "Baja realizada",
-                    "El empleado fue eliminado correctamente.",
-                    parent=self.pestana
+                    "Éxito",
+                    "Empleado eliminado correctamente.",
+                    parent=self.pestana,
                 )
 
-        # ==========================================================================
-        # 6. ENLACE DEL EVENTO DE SELECCIÓN
-        # ==========================================================================
-
-        # Cuando el usuario selecciona una fila del Treeview, se ejecuta automáticamente cargar_datos_seleccionados(). event=None permite que la función pueda recibir el evento generado por Tkinter.
-        self.tabla.bind(
-            "<<TreeviewSelect>>",
-            cargar_datos_seleccionados
-        )
-
-        # ==========================================================================
-        # 7. BOTONES DE OPERACIONES CRUD
-        # ==========================================================================
-
-        # --------------------------------------------------------------------------
-        # NUEVO EMPLEADO
-        # --------------------------------------------------------------------------
+        # ======================================================================
+        # 4. BOTONES Y ENLACES
+        # ======================================================================
+        self.tabla.bind("<<TreeviewSelect>>", cargar_datos_seleccionados)
 
         tk.Button(
             self.pestana,
-            text="Nuevo empleado",
+            text="Nuevo Empleado",
             command=nuevo_empleado,
-            width=16
-        ).grid(
-            row=0,
-            column=4,
-            padx=15,
-            pady=2,
-            sticky="w"
-        )
-
-        # --------------------------------------------------------------------------
-        # GUARDAR EMPLEADO
-        # --------------------------------------------------------------------------
+            width=16,
+        ).grid(row=0, column=4, padx=15, pady=2, sticky="w")
 
         tk.Button(
             self.pestana,
-            text="Guardar empleado",
+            text="Guardar Empleado",
             command=guardar,
-            width=16
-        ).grid(
-            row=1,
-            column=4,
-            padx=15,
-            pady=2,
-            sticky="w"
-        )
-
-        # --------------------------------------------------------------------------
-        # MODIFICAR EMPLEADO
-        # --------------------------------------------------------------------------
+            width=16,
+        ).grid(row=1, column=4, padx=15, pady=2, sticky="w")
 
         tk.Button(
             self.pestana,
-            text="Modificar empleado",
+            text="Modificar Empleado",
             command=modificar,
-            width=16
-        ).grid(
-            row=2,
-            column=4,
-            padx=15,
-            pady=2,
-            sticky="w"
-        )
-
-        # --------------------------------------------------------------------------
-        # ELIMINAR EMPLEADO
-        # --------------------------------------------------------------------------
+            width=16,
+        ).grid(row=2, column=4, padx=15, pady=2, sticky="w")
 
         tk.Button(
             self.pestana,
-            text="Eliminar empleado",
+            text="Eliminar Empleado",
             command=eliminar,
-            width=16
-        ).grid(
-            row=3,
-            column=4,
-            padx=15,
-            pady=2,
-            sticky="w"
-        )
+            width=16,
+        ).grid(row=3, column=4, padx=15, pady=2, sticky="w")
+
+        # Cargar la tabla al inicializar
+        cargar_tabla_desde_db()
