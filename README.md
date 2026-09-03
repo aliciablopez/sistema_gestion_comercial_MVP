@@ -1,6 +1,6 @@
 # Sistema de Gestión Comercial
 
-Proyecto de laboratorio desarrollado en Python y Tkinter.
+Proyecto de laboratorio desarrollado en Python y Tkinter. Motor de persistencia: SQLite3
 
 ## Descripción
 Sistema de gestión comercial con interfaz gráfica orientada a pestañas para la administración de:
