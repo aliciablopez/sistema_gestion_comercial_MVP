@@ -17,7 +17,7 @@ Sistema de gestión comercial con interfaz gráfica orientada a pestañas para l
 - Git y GitHub (Control de Versiones)
 
 ## Persistencia de Datos
-El sistema utiliza **SQLite3** como motor de almacenamiento relacional local. Todos los registros de clientes, empleados, proveedores, inventario de productos, cabeceras de facturas y sus correspondientes detalles se almacenan de manera persistente en el archivo local `sistema_facturacion.db`.
+El sistema utiliza **SQLite3** como motor de almacenamiento relacional local. Todos los registros de clientes, empleados, proveedores, inventario de productos, cabeceras de facturas y sus correspondientes detalles se almacenan de manera persistente en el archivo local `database.db`.
 
 La inicialización del esquema y la creación de las tablas ocurren de forma automática al ejecutar la aplicación si el archivo de base de datos no existe previamente.
 
